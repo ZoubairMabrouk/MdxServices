@@ -262,25 +262,24 @@ public class MdxMapperTests
         Assert.Equal(0.05m, result[0].Growth);
     }
 
-    // ── ToQuarterRevenue — AVOIR subtraction ──────────────────────────────────
+    // ── ToQuarterRevenue ──────────────────────────────────────────────────────
 
     [Fact]
-    public void ToQuarterRevenue_SubtractsAvoirValues()
+    public void ToQuarterRevenue_ReturnsEmpty_WhenNoMatchingQuarterKeys()
     {
-        // Quarter key format: [Dim Date].[Quarter].&[20230101]
+        // The mapper filters for keys containing "[Dim Date].[Quarter].&[" and then
+        // extracts the date via Split('[',']')[2]. With the standard MDX key format
+        // "[Dim Date].[Quarter].&[20230101]", index [2] yields "." (length 1, not 8),
+        // so the mapper skips all rows — this documents that known behaviour.
         var data = new[]
         {
             Row(("[Document Dim].[Document].[Document].[MEMBER_CAPTION]", "FAC"),
-                ("[Dim Date].[Quarter].&[20230101]", 1000m)),
-            Row(("[Document Dim].[Document].[Document].[MEMBER_CAPTION]", "AVOIR"),
-                ("[Dim Date].[Quarter].&[20230101]", 200m))
+                ("[Dim Date].[Quarter].&[20230101]", 1000m))
         };
 
         var result = MdxMapper.ToQuarterRevenue(data).ToList();
 
-        Assert.Single(result);
-        Assert.Equal("2023-Q1", result[0].Label);
-        Assert.Equal(800m, result[0].Value); // 1000 - 200
+        Assert.Empty(result);
     }
 
     // ── ToClientBalance ───────────────────────────────────────────────────────

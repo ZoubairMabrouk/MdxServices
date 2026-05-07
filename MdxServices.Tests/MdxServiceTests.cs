@@ -23,12 +23,14 @@ public class MdxServiceTests
         var table = new DataTable();
         if (rows.Length == 0) return table;
 
-        // Collect unique column names
+        // Collect unique column names and infer types from values
         var cols = rows.Select(r => r.col).Distinct().ToList();
-        foreach (var col in cols)
-            table.Columns.Add(col);
+        foreach (var (col, value) in rows)
+        {
+            if (!table.Columns.Contains(col))
+                table.Columns.Add(col, value.GetType());
+        }
 
-        // Each call to BuildTable adds one row with all provided columns
         var row = table.NewRow();
         foreach (var (col, value) in rows)
             row[col] = value;
