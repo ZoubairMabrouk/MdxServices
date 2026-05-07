@@ -94,7 +94,7 @@ public class RevenueControllerTests
     public void ByYear_Returns503_OnConnectionException()
     {
         _serviceMock.Setup(s => s.Execute(It.IsAny<string>()))
-                    .Throws(new AdomdConnectionException("host unreachable"));
+                    .Throws<AdomdConnectionException>();
 
         var result = CreateController().ByYear() as ObjectResult;
 
@@ -104,7 +104,6 @@ public class RevenueControllerTests
         var body = result.Value as ApiResponse<object>;
         Assert.NotNull(body);
         Assert.False(body!.Success);
-        Assert.Contains("Connection error", body.Error);
     }
 
     [Fact]

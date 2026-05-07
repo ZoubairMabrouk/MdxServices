@@ -123,7 +123,7 @@ public class ClientControllerTests
     public void HighDiscountLowMargin_Returns503_OnConnectionException()
     {
         _serviceMock.Setup(s => s.Execute(It.IsAny<string>()))
-                    .Throws(new AdomdConnectionException("timeout"));
+                    .Throws<AdomdConnectionException>();
 
         var result = CreateController().HighDiscountLowMargin() as ObjectResult;
 

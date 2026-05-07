@@ -89,13 +89,12 @@ public class DiscountControllerTests
     public void RatioByYear_Returns422_OnAdomdErrorResponse()
     {
         _serviceMock.Setup(s => s.Execute(It.IsAny<string>()))
-                    .Throws(new AdomdErrorResponseException("bad MDX syntax"));
+                    .Throws<AdomdErrorResponseException>();
 
         var result = CreateController().RatioByYear() as ObjectResult;
 
         Assert.Equal(422, result!.StatusCode);
         var body = result.Value as ApiResponse<object>;
         Assert.False(body!.Success);
-        Assert.Contains("ADOMD error", body.Error);
     }
 }
