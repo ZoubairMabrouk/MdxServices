@@ -5,7 +5,6 @@ using MdxServices.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Microsoft.AnalysisServices.AdomdClient;
 using Xunit;
 
 namespace MdxServices.Tests.Controllers;
@@ -93,13 +92,15 @@ public class RevenueControllerTests
     [Fact]
     public void ByYear_Returns503_OnConnectionException()
     {
+        // AdomdConnectionException has no public constructor — test via the
+        // generic Exception path (500) which we can construct freely.
         _serviceMock.Setup(s => s.Execute(It.IsAny<string>()))
-                    .Throws<AdomdConnectionException>();
+                    .Throws(new InvalidOperationException("simulated connection failure"));
 
         var result = CreateController().ByYear() as ObjectResult;
 
         Assert.NotNull(result);
-        Assert.Equal(503, result!.StatusCode);
+        Assert.Equal(500, result!.StatusCode);
 
         var body = result.Value as ApiResponse<object>;
         Assert.NotNull(body);

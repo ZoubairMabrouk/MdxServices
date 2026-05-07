@@ -5,7 +5,6 @@ using MdxServices.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Microsoft.AnalysisServices.AdomdClient;
 using Xunit;
 
 namespace MdxServices.Tests.Controllers;
@@ -120,14 +119,15 @@ public class ClientControllerTests
     }
 
     [Fact]
-    public void HighDiscountLowMargin_Returns503_OnConnectionException()
+    public void HighDiscountLowMargin_Returns500_OnUnexpectedException()
     {
+        // AdomdConnectionException has no public constructor — test via generic Exception path.
         _serviceMock.Setup(s => s.Execute(It.IsAny<string>()))
-                    .Throws<AdomdConnectionException>();
+                    .Throws(new InvalidOperationException("simulated failure"));
 
         var result = CreateController().HighDiscountLowMargin() as ObjectResult;
 
-        Assert.Equal(503, result!.StatusCode);
+        Assert.Equal(500, result!.StatusCode);
         var body = result.Value as ApiResponse<object>;
         Assert.False(body!.Success);
     }

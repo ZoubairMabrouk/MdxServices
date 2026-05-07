@@ -5,7 +5,6 @@ using MdxServices.Dto;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
-using Microsoft.AnalysisServices.AdomdClient;
 using Xunit;
 
 namespace MdxServices.Tests.Controllers;
@@ -86,14 +85,15 @@ public class DiscountControllerTests
     }
 
     [Fact]
-    public void RatioByYear_Returns422_OnAdomdErrorResponse()
+    public void RatioByYear_Returns500_OnUnexpectedException()
     {
+        // AdomdErrorResponseException has no public constructor — test via generic Exception path.
         _serviceMock.Setup(s => s.Execute(It.IsAny<string>()))
-                    .Throws<AdomdErrorResponseException>();
+                    .Throws(new InvalidOperationException("simulated MDX failure"));
 
         var result = CreateController().RatioByYear() as ObjectResult;
 
-        Assert.Equal(422, result!.StatusCode);
+        Assert.Equal(500, result!.StatusCode);
         var body = result.Value as ApiResponse<object>;
         Assert.False(body!.Success);
     }
