@@ -27,7 +27,6 @@ jobs:
           cache-dependency-path: |
             **/*.csproj
             **/*.sln
-            **/packages.lock.json
 
       - name: Restore
         run: dotnet restore "./MdxServices.sln"

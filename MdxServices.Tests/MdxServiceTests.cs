@@ -4,6 +4,7 @@ using MdxServices.Services;
 using Microsoft.Extensions.Logging;
 using Moq;
 using System.Data;
+using Xunit;
 
 namespace MdxServices.Tests;
 

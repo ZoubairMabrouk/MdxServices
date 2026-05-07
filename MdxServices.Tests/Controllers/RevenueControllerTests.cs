@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
 using Moq;
 using Microsoft.AnalysisServices.AdomdClient;
+using Xunit;
 
 namespace MdxServices.Tests.Controllers;
 
