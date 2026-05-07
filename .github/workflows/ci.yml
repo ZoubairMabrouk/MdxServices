@@ -35,15 +35,8 @@ jobs:
       - name: Build (Release)
         run: dotnet build "./MdxServices.sln" -c Release --no-restore
 
-      - name: Test (if any test projects exist)
-        shell: pwsh
-        run: |
-          $testProjects = Get-ChildItem -Path . -Recurse -Filter "*Test*.csproj" -File
-          if ($testProjects.Count -gt 0) {
-            dotnet test "./MdxServices.sln" -c Release --no-build --verbosity normal
-          } else {
-            "No test projects found (skipping dotnet test)."
-          }
+      - name: Test
+        run: dotnet test "./MdxServices.sln" -c Release --no-build --verbosity normal
 
       - name: Smoke test (start API and fetch swagger)
         shell: pwsh
