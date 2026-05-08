@@ -46,7 +46,7 @@ jobs:
           $url = "http://127.0.0.1:$port"
           $swagger = "$url/swagger/v1/swagger.json"
 
-          $proc = Start-Process -FilePath "dotnet" -ArgumentList @("run","--project","./MdxServices.csproj","--no-build","--urls",$url) -PassThru -NoNewWindow
+          $proc = Start-Process -FilePath "dotnet" -ArgumentList @("run","--project","./MdxServices.csproj","--no-build","-c","Release","--urls",$url) -PassThru -NoNewWindow
           try {
             $deadline = (Get-Date).AddSeconds(30)
             while ((Get-Date) -lt $deadline) {
