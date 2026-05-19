@@ -122,3 +122,132 @@ jobs:
           push: ${{ github.event_name == 'push' && github.ref == 'refs/heads/master' }}
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
+  deploy:
+    runs-on: ubuntu-latest
+    needs: docker
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v0.1.7
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          username: ${{ secrets.VPS_USER }}
+          port: 22
+          debug: true
+          timeout: 180s
+          command_timeout: 30m
+          script: |
+            set -e
+
+            echo "Logging in to GHCR"
+            echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+            echo "Pulling latest image"
+            docker pull ghcr.io/zoubairmabrouk/${{github.repository}}:latest
+
+            echo "Stopping existing container if present"
+            docker rm -f ${{github.repository}} || true
+
+            echo "Running latest container"
+            docker run -d \
+              --name ${{github.repository}} \
+              --restart unless-stopped \
+              -p 8085:8080 \
+              -e "Jwt__SecretKey=${{ secrets.JWT_SECRET_KEY }}" \
+              -e "Jwt__Issuer=${{ secrets.JWT_ISSUER }}" \
+              -e "Jwt__Audience=${{ secrets.JWT_AUDIENCE }}" \
+              -e "ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}" \
+              -e "ASPNETCORE_ENVIRONMENT=Production" \
+              ghcr.io/zoubairmabrouk/${{github.repository}}:latest
+
+            echo "Deployment completed successfully"
+            docker ps --filter "name=${{github.repository}}"
+  # =========================================
+  # deploy-staging:
+  #   name: Deploy to Staging
+  #   runs-on: ubuntu-latest
+  #   needs: docker-build
+  #   if: github.event_name == 'push' && github.ref == 'refs/heads/develop'
+  #   environment:
+  #     name: staging
+
+  #   steps:
+  #     - name: Checkout repository
+  #       uses: actions/checkout@v4
+
+  #     - name: Deploy to Staging VPS
+  #       uses: appleboy/ssh-action@v1.0.3
+  #       with:
+  #         host: ${{ secrets.STAGING_VPS_HOST }}
+  #         username: ${{ secrets.STAGING_VPS_USER }}
+  #         key: ${{ secrets.STAGING_VPS_SSH_KEY }}
+  #         port: ${{ secrets.STAGING_VPS_PORT }}
+  #         timeout: 120s
+  #         script: |
+  #           set -e
+
+  #           echo "Logging in to GHCR"
+  #           echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+  #           echo "Pulling latest image"
+  #           docker pull ghcr.io/zoubairmabrouk/${{github.repository}}:latest
+
+  #           echo "Stopping existing container if present"
+  #           docker rm -f ${{github.repository}} || true
+
+  #           echo "Running latest container"
+  #           docker run -d --name ${{github.repository}} --restart unless-stopped -p 8085:8080 ghcr.io/zoubairmabrouk/${{github.repository}}:latest
+
+  #           echo "Staging deployment completed"
+
+  # =========================================
+  # NOTIFICATIONS
+  # =========================================
+  notify-success:
+    name: 📬 Telegram — Succès
+    runs-on: ubuntu-latest
+    needs: [docker, deploy]
+    if: success()
+    steps:
+      - name: ✅ Notification succès
+        run: |
+          curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"✅ *${{github.repository}} — Déployé*\n\n💬 *Service* : ${{github.repository}}\n🏷️ *Version* : \`${{ needs.docker-build.outputs.image_version }}\`\n👤 *Auteur* : ${{ github.actor }}\n📝 *SHA* : \`${GITHUB_SHA::8}\`\n🔗 [Voir workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\",
+              \"parse_mode\": \"Markdown\"
+            }"
+
+  notify-failure:
+    name: 📬 Telegram — Échec
+    runs-on: ubuntu-latest
+    needs: [docker, deploy]
+    if: failure()
+    steps:
+      - name: ❌ Notification échec
+        run: |
+          curl -s -X POST \
+            "https://api.telegram.org/bot${{ secrets.TELEGRAM_TOKEN }}/sendMessage" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
+              \"text\": \"❌ *${{github.repository}} — Échec Déploiement*\n\n👤 *Auteur* : ${{ github.actor }}\n📝 *SHA* : \`${GITHUB_SHA::8}\`\n🔗 [🔍 Voir logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\",
+              \"parse_mode\": \"Markdown\"
+            }"
