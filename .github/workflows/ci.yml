@@ -169,7 +169,7 @@ jobs:
             docker run -d \
               --name "$CONTAINER_NAME" \
               --restart unless-stopped \
-              -p 8085:8080 \
+              -p 8081:8080 \
               -e "Jwt__SecretKey=${{ secrets.JWT_SECRET_KEY }}" \
               -e "Jwt__Issuer=${{ secrets.JWT_ISSUER }}" \
               -e "Jwt__Audience=${{ secrets.JWT_AUDIENCE }}" \
