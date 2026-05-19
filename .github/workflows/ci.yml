@@ -159,26 +159,26 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "Pulling latest image"
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/zoubairmabrouk/mdxservices:sha-0603d9d
 
             echo "Stopping existing container if present"
             CONTAINER_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]') || CONTAINER_NAME=${{ github.event.repository.name }}
-            docker rm -f $CONTAINER_NAME || true
+            docker rm -f mdxservices || true
 
-            echo "Running latest container"
+            echo "Running sha-0603d9d container"
             docker run -d \
-              --name $CONTAINER_NAME \
+              --name mdxservices \
               --restart unless-stopped \
-              -p 8085:8080 \
+              -p 8080:8080 \
               -e "Jwt__SecretKey=${{ secrets.JWT_SECRET_KEY }}" \
               -e "Jwt__Issuer=${{ secrets.JWT_ISSUER }}" \
               -e "Jwt__Audience=${{ secrets.JWT_AUDIENCE }}" \
               -e "ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}" \
               -e "ASPNETCORE_ENVIRONMENT=Production" \
-              ghcr.io/${{ github.repository }}:latest
+              ghcr.io/zoubairmabrouk/mdxservices:sha-0603d9d
 
             echo "Deployment completed successfully"
-            docker ps --filter "name=$CONTAINER_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            docker ps --filter "name=mdxservices" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
   # =========================================
   # deploy-staging:
   #   name: Deploy to Staging
