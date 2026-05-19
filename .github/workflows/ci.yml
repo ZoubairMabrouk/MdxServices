@@ -158,7 +158,7 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "Pulling latest image"
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/zoubairmabrouk/${{github.event.repository.name}}:latest
 
             echo "Stopping existing container if present"
             docker rm -f ${{github.event.repository.name}} || true
@@ -173,10 +173,10 @@ jobs:
               -e "Jwt__Audience=${{ secrets.JWT_AUDIENCE }}" \
               -e "ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}" \
               -e "ASPNETCORE_ENVIRONMENT=Production" \
-              ghcr.io/${{ github.repository }}:latest
+              ghcr.io/zoubairmabrouk/${{github.event.repository.name}}:latest
 
             echo "Deployment completed successfully"
-            docker ps --filter "name=${{github.repository}}"
+            docker ps --filter "name=${{github.event.repository.name}}" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
   # =========================================
   # deploy-staging:
   #   name: Deploy to Staging
