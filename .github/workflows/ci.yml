@@ -109,7 +109,7 @@ jobs:
         id: meta
         uses: docker/metadata-action@v5
         with:
-          images: ghcr.io/${{ github.repository }}
+          images: ghcr.io/zoubairmabrouk/mdxservices
           tags: |
             type=ref,event=branch
             type=sha
@@ -159,7 +159,7 @@ jobs:
             echo "${{ secrets.GHCR_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
             echo "Pulling latest image"
-            docker pull ghcr.io/${{ github.repository }}:latest
+            docker pull ghcr.io/zoubairmabrouk/mdxservices:latest
 
             echo "Stopping existing container if present"
             CONTAINER_NAME=$(echo "${{ github.event.repository.name }}" | tr '[:upper:]' '[:lower:]') || CONTAINER_NAME=${{ github.event.repository.name }}
@@ -175,7 +175,7 @@ jobs:
               -e "Jwt__Audience=${{ secrets.JWT_AUDIENCE }}" \
               -e "ConnectionStrings__DefaultConnection=${{ secrets.DB_CONNECTION_STRING }}" \
               -e "ASPNETCORE_ENVIRONMENT=Production" \
-              ghcr.io/${{ github.repository }}:latest
+              ghcr.io/zoubairmabrouk/mdxservices:latest
 
             echo "Deployment completed successfully"
             docker ps --filter "name=$CONTAINER_NAME" --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -233,7 +233,7 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{
               \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
-              \"text\": \"✅ *${{github.repository}} — Déployé*\n\n💬 *Service* : ${{github.repository}}\n🏷️ *Version* : \`${{ needs.docker-build.outputs.image_version }}\`\n👤 *Auteur* : ${{ github.actor }}\n📝 *SHA* : \`${GITHUB_SHA::8}\`\n🔗 [Voir workflow](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\",
+              \"text\": \"✅ *${{github.repository}} — Déployé*\n\n💬 *Service* : ${{github.repository}}\n🏷️ *Version* : \`${{ needs.docker-build.outputs.image_version }}\`\n👤 *Auteur* : ${{ github.actor }}\n📝 *SHA* : \`${GITHUB_SHA::8}\`\n🔗 [Voir workflow](${{ github.server_url }}/zoubairmabrouk/mdxservices/actions/runs/${{ github.run_id }})\",
               \"parse_mode\": \"Markdown\"
             }"
 
@@ -250,6 +250,6 @@ jobs:
             -H "Content-Type: application/json" \
             -d "{
               \"chat_id\": \"${{ secrets.TELEGRAM_CHAT_ID }}\",
-              \"text\": \"❌ *${{github.repository}} — Échec Déploiement*\n\n👤 *Auteur* : ${{ github.actor }}\n📝 *SHA* : \`${GITHUB_SHA::8}\`\n🔗 [🔍 Voir logs](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})\",
+              \"text\": \"❌ *${{github.repository}} — Échec Déploiement*\n\n👤 *Auteur* : ${{ github.actor }}\n📝 *SHA* : \`${GITHUB_SHA::8}\`\n🔗 [🔍 Voir logs](${{ github.server_url }}/zoubairmabrouk/mdxservices/actions/runs/${{ github.run_id }})\",
               \"parse_mode\": \"Markdown\"
             }"
